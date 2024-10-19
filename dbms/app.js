@@ -37,20 +37,28 @@ app.get("/", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-  res.render("register");
+  res.sendFile(path.join(__dirname, "public", "register.html")); // Adjust the path as needed
 });
 
 app.get("/login", (req, res) => {
   res.render("login");
 });
 
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 app.post("/auth/register", async (req, res) => {
-  const { User_ID, User_Name, Email, Pass_word, Address } = req.body;
-  console.log(User_ID, User_Name, Email, Pass_word, Address);
-  console.log(req.body);
+  const { User_ID, User_Name, Email, Pass_word, DOB, Address, Mobile_Number } =
+    req.body;
+  console.log(
+    User_ID,
+    User_Name,
+    Email,
+    DOB,
+    Pass_word,
+    Address,
+    Mobile_Number
+  );
 
   // Check if the email is already in use
   db.query(
@@ -76,6 +84,7 @@ app.post("/auth/register", async (req, res) => {
           User_ID: User_ID,
           User_Name: User_Name,
           Email: Email,
+          DOB: DOB,
           Pass_word: Pass_word, // Inserting plain text password
           Address: Address,
         },
@@ -83,17 +92,39 @@ app.post("/auth/register", async (req, res) => {
           if (err) {
             console.log(err);
             return res.render("register", { message: "An error occurred." });
-          } else {
-            return res.render("register", {
-              message: "User registered!",
-            });
           }
+
+          // Insert into the `User_MobileNumber` table for each mobile number
+          const mobileNumbers = Array.isArray(Mobile_Number)
+            ? Mobile_Number
+            : [Mobile_Number]; // Ensure it's an array
+
+          mobileNumbers.forEach((number) => {
+            if (number) {
+              // Check if the mobile number is not empty
+              db.query(
+                "INSERT INTO User_MobileNumber SET ?",
+                {
+                  Mobile_Number: number,
+                  User_ID: User_ID, // Linking the mobile number to the user
+                },
+                (err, result) => {
+                  if (err) {
+                    console.log(err);
+                  }
+                }
+              );
+            }
+          });
+
+          return res.render("register", {
+            message: "User registered!",
+          });
         }
       );
     }
   );
 });
-
 app.listen(5000, () => {
   console.log("server started on port 5000");
 });
