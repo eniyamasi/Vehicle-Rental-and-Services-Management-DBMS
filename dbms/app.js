@@ -26,26 +26,24 @@ db.connect((error) => {
   }
 });
 
-app.set("view engine", "hbs");
-
 const publicDir = path.join(__dirname, "./public");
-
-app.use(express.static(publicDir));
-
-app.get("/", (req, res) => {
-  res.render("index");
-});
-
-app.get("/register", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "register.html")); // Adjust the path as needed
-});
-
-app.get("/login", (req, res) => {
-  res.render("login");
-});
+app.use(express.static(publicDir)); // Serving static HTML files
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
+// Serve HTML files
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+app.get("/register", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "register.html"));
+});
+
+app.get("/login", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "login.html"));
+});
 
 app.post("/auth/register", async (req, res) => {
   const { User_ID, User_Name, Email, Pass_word, DOB, Address, Mobile_Number } =
@@ -60,24 +58,21 @@ app.post("/auth/register", async (req, res) => {
     Mobile_Number
   );
 
-  // Check if the email is already in use
   db.query(
     "SELECT Email FROM User WHERE Email = ?",
     [Email],
     (error, result) => {
       if (error) {
         console.log(error);
-        return res.render("register", { message: "An error occurred." });
+        return res.redirect("/register?message=An%20error%20occurred");
       }
 
-      // Check if the email already exists
       if (result.length > 0) {
-        return res.render("register", {
-          message: "This email is already in use",
-        });
+        return res.redirect(
+          "/register?message=This%20email%20is%20already%20in%20use"
+        );
       }
 
-      // Insert the new user without hashing the password
       db.query(
         "INSERT INTO User SET ?",
         {
@@ -85,28 +80,26 @@ app.post("/auth/register", async (req, res) => {
           User_Name: User_Name,
           Email: Email,
           DOB: DOB,
-          Pass_word: Pass_word, // Inserting plain text password
+          Pass_word: Pass_word,
           Address: Address,
         },
         (err, result) => {
           if (err) {
             console.log(err);
-            return res.render("register", { message: "An error occurred." });
+            return res.redirect("/register?message=An%20error%20occurred");
           }
 
-          // Insert into the `User_MobileNumber` table for each mobile number
           const mobileNumbers = Array.isArray(Mobile_Number)
             ? Mobile_Number
-            : [Mobile_Number]; // Ensure it's an array
+            : [Mobile_Number];
 
           mobileNumbers.forEach((number) => {
             if (number) {
-              // Check if the mobile number is not empty
               db.query(
                 "INSERT INTO User_MobileNumber SET ?",
                 {
                   Mobile_Number: number,
-                  User_ID: User_ID, // Linking the mobile number to the user
+                  User_ID: User_ID,
                 },
                 (err, result) => {
                   if (err) {
@@ -117,14 +110,15 @@ app.post("/auth/register", async (req, res) => {
             }
           });
 
-          return res.render("register", {
-            message: "User registered!",
-          });
+          return res.redirect(
+            "/register?message=User%20registered%20successfully"
+          );
         }
       );
     }
   );
 });
+
 app.listen(5000, () => {
   console.log("server started on port 5000");
 });
