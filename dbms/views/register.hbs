@@ -23,20 +23,35 @@
             <div class="card-body">
                 <form action="/auth/register" method="POST">
                     <div class="mb-3">
-                        <label for="name-reg" class="form-label">Name</label>
-                        <input type="text" class="form-control" id="name-reg" name="name">                        
+                        <label for="User_ID-reg" class="form-label">User_ID</label>
+                        <input type="text" class="form-control" id="User_ID-reg" name="User_ID">                        
                     </div>
                     <div class="mb-3">
-                        <label for="email-reg" class="form-label">Email</label>
-                        <input type="text" class="form-control" id="email-reg" name="email">                        
+                        <label for="User_Name-reg" class="form-label">User_Name</label>
+                        <input type="text" class="form-control" id="User_Name-reg" name="User_Name">                        
                     </div>
                     <div class="mb-3">
-                        <label for="password-reg" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="password-reg" name="password">
+                        <label for="Email-reg" class="form-label">Email</label>
+                        <input type="text" class="form-control" id="Email-reg" name="Email">                        
                     </div>
                     <div class="mb-3">
-                        <label for="password-conf-reg" class="form-label">Confirm Password</label>
-                        <input type="password" class="form-control" id="password-conf-reg" name="password_confirm">
+                        <label for="Pass_word-reg" class="form-label">Pass_word</label>
+                        <input type="Pass_word" class="form-control" id="Pass_word-reg" name="Pass_word">
+                    </div>
+                    <div class="mb-3">
+                        <label for="DOB-reg" class="form-label">DOB</label>
+                        <input type="text" class="form-control" id="DOB-reg" name="DOB">
+                    </div>
+                    <div class="mb-3">
+                        <label for="Mobile_Number-reg" class="form-label">Mobile Number(s)</label>
+                        <div id="mobile-container">
+                            <input type="text" class="form-control mb-2" id="Mobile_Number-reg" name="Mobile_Number[]">
+                        </div>
+                        <button type="button" class="btn btn-secondary" id="add-mobile-btn">Add Another Mobile Number</button>
+                    </div>
+                    <div class="mb-3">
+                        <label for="Address-reg" class="form-label">Address</label>
+                        <input type="text" class="form-control" id="Address-reg" name="Address">
                     </div>
 
                     <button type="submit" class="btn btn-primary">Submit</button>
@@ -47,5 +62,15 @@
     {{#if message }}
     <h4 class="alert alert-danger mt-4">{{message}}</h4>
     {{/if}}
+
+    <script>
+    document.getElementById('add-mobile-btn').addEventListener('click', function () {
+    const newInput = document.createElement('input');
+    newInput.type = 'text';
+    newInput.className = 'form-control mb-2';
+    newInput.name = 'Mobile_Number[]'; // Allow multiple mobile numbers
+    document.getElementById('mobile-container').appendChild(newInput);
+});
+</script>
 </body>
 </html>
