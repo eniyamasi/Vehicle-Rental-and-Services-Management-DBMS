@@ -2,6 +2,8 @@ const express = require("express");
 const mysql = require("mysql2");
 const dotenv = require("dotenv");
 const path = require("path");
+const session = require("express-session"); // Import express-session
+const { v4: uuidv4 } = require("uuid"); // Import UUID
 
 const app = express();
 
@@ -26,37 +28,36 @@ db.connect((error) => {
   }
 });
 
+// Initialize session middleware
+app.use(
+  session({
+    secret: "your_secret_key", // Replace with a random secret
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false }, // For production, use true with HTTPS
+  })
+);
+
 const publicDir = path.join(__dirname, "./public");
 app.use(express.static(publicDir)); // Serving static HTML files
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// Serve HTML files
+// Serve index.html with session check for username
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
+// Serve register.html
 app.get("/register", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "register.html"));
 });
 
-app.get("/login", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "login.html"));
-});
-
+// Handle user registration
 app.post("/auth/register", async (req, res) => {
-  const { User_ID, User_Name, Email, Pass_word, DOB, Address, Mobile_Number } =
-    req.body;
-  console.log(
-    User_ID,
-    User_Name,
-    Email,
-    DOB,
-    Pass_word,
-    Address,
-    Mobile_Number
-  );
+  const { User_Name, Email, Pass_word, DOB, Address, Mobile_Number } = req.body;
+  const User_ID = uuidv4(); // Generate a unique User_ID
 
   db.query(
     "SELECT Email FROM User WHERE Email = ?",
@@ -75,14 +76,7 @@ app.post("/auth/register", async (req, res) => {
 
       db.query(
         "INSERT INTO User SET ?",
-        {
-          User_ID: User_ID,
-          User_Name: User_Name,
-          Email: Email,
-          DOB: DOB,
-          Pass_word: Pass_word,
-          Address: Address,
-        },
+        { User_ID, User_Name, Email, DOB, Pass_word, Address },
         (err, result) => {
           if (err) {
             console.log(err);
@@ -92,15 +86,11 @@ app.post("/auth/register", async (req, res) => {
           const mobileNumbers = Array.isArray(Mobile_Number)
             ? Mobile_Number
             : [Mobile_Number];
-
           mobileNumbers.forEach((number) => {
             if (number) {
               db.query(
                 "INSERT INTO User_MobileNumber SET ?",
-                {
-                  Mobile_Number: number,
-                  User_ID: User_ID,
-                },
+                { Mobile_Number: number, User_ID },
                 (err, result) => {
                   if (err) {
                     console.log(err);
@@ -110,15 +100,26 @@ app.post("/auth/register", async (req, res) => {
             }
           });
 
-          return res.redirect(
-            "/register?message=User%20registered%20successfully"
-          );
+          // Set session with username after registration
+          req.session.username = User_Name;
+
+          // Redirect to the index page
+          return res.redirect("/");
         }
       );
     }
   );
 });
 
+// Check session status to display username
+app.get("/session-status", (req, res) => {
+  if (req.session.username) {
+    res.json({ loggedIn: true, username: req.session.username });
+  } else {
+    res.json({ loggedIn: false });
+  }
+});
+
 app.listen(5000, () => {
-  console.log("server started on port 5000");
+  console.log("Server started on port 5000");
 });
