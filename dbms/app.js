@@ -2,7 +2,6 @@ const express = require("express");
 const mysql = require("mysql2");
 const dotenv = require("dotenv");
 const path = require("path");
-const bcrypt = require("bcryptjs");
 
 const app = express();
 
@@ -49,15 +48,15 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
 app.post("/auth/register", async (req, res) => {
-  const { name, email, password, password_confirm } = req.body;
-  console.log(name, email, password, password_confirm);
+  const { User_ID, User_Name, Email, Pass_word, Address } = req.body;
+  console.log(User_ID, User_Name, Email, Pass_word, Address);
   console.log(req.body);
 
   // Check if the email is already in use
   db.query(
-    "SELECT email FROM users WHERE email = ?",
-    [email],
-    async (error, result) => {
+    "SELECT Email FROM User WHERE Email = ?",
+    [Email],
+    (error, result) => {
       if (error) {
         console.log(error);
         return res.render("register", { message: "An error occurred." });
@@ -70,36 +69,27 @@ app.post("/auth/register", async (req, res) => {
         });
       }
 
-      // Check if passwords match
-      if (password !== password_confirm) {
-        return res.render("register", {
-          message: "Passwords do not match!",
-        });
-      }
-
-      // Hash the password and insert the new user
-      try {
-        let hashedPassword = await bcrypt.hash(password, 8);
-        db.query(
-          "INSERT INTO users SET ?",
-          { name: name, email: email, password: hashedPassword },
-          (err, result) => {
-            if (err) {
-              console.log(err);
-              return res.render("register", { message: "An error occurred." });
-            } else {
-              return res.render("register", {
-                message: "User registered!",
-              });
-            }
+      // Insert the new user without hashing the password
+      db.query(
+        "INSERT INTO User SET ?",
+        {
+          User_ID: User_ID,
+          User_Name: User_Name,
+          Email: Email,
+          Pass_word: Pass_word, // Inserting plain text password
+          Address: Address,
+        },
+        (err, result) => {
+          if (err) {
+            console.log(err);
+            return res.render("register", { message: "An error occurred." });
+          } else {
+            return res.render("register", {
+              message: "User registered!",
+            });
           }
-        );
-      } catch (err) {
-        console.log(err);
-        return res.render("register", {
-          message: "An error occurred while hashing the password.",
-        });
-      }
+        }
+      );
     }
   );
 });
