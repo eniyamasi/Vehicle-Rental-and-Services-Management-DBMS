@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Owner Dashboard</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2 class="text-center mb-4">Owner Dashboard</h2>
+        <div class="row justify-content-center">
+            <!-- Add Vehicles Button -->
+            <div class="col-md-4 mb-3">
+                <button type="button" class="btn btn-primary btn-lg btn-block" data-bs-toggle="modal" data-bs-target="#addVehicleModal">
+                    Add Vehicles
+                </button>
+            </div>
+            <!-- Renter Details Button -->
+            <div class="col-md-4 mb-3">
+                <button class="btn btn-secondary btn-lg btn-block" data-bs-toggle="collapse" data-bs-target="#renterDetails">
+                    Renter Details
+                </button>
+            </div>
+        </div>
+
+        <!-- Collapsible Renter Details Section -->
+        <div class="collapse" id="renterDetails">
+            <div class="card card-body mt-4">
+                <h5 class="text-center">Current Renter Details</h5>
+                <table class="table table-bordered mt-3">
+                    <thead>
+                        <tr>
+                            <th>License Number</th>
+                            <th>Rental Duration</th>
+                            <th>Pickup Location</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>ABC123456</td>
+                            <td>3 Days</td>
+                            <td>123 Main St, City</td>
+                        </tr>
+                        <tr>
+                            <td>DEF789101</td>
+                            <td>5 Days</td>
+                            <td>456 Elm St, City</td>
+                        </tr>
+                        <!-- Add more rows as needed -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Modal for Add Vehicles -->
+        <div class="modal fade" id="addVehicleModal" tabindex="-1" aria-labelledby="addVehicleModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addVehicleModalLabel">Add Vehicle Details</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form>
+                            <!-- Vehicle Number -->
+                            <div class="mb-3">
+                                <label for="vehicleNumber" class="form-label">Vehicle Number</label>
+                                <input type="text" class="form-control" id="vehicleNumber" placeholder="Enter vehicle number">
+                            </div>
+                            <!-- AC Type -->
+                            <div class="mb-3">
+                                <label for="acType" class="form-label">AC or Non-AC</label>
+                                <select class="form-select" id="acType">
+                                    <option value="" selected>Select type</option>
+                                    <option value="AC">AC</option>
+                                    <option value="Non-AC">Non-AC</option>
+                                </select>
+                            </div>
+                            <!-- Gear Type -->
+                            <div class="mb-3">
+                                <label for="gearType" class="form-label">Gear Type</label>
+                                <select class="form-select" id="gearType">
+                                    <option value="" selected>Select gear type</option>
+                                    <option value="Manual">Manual</option>
+                                    <option value="Automatic">Automatic</option>
+                                </select>
+                            </div>
+                            <!-- Number of Seats -->
+                            <div class="mb-3">
+                                <label for="seats" class="form-label">Number of Seats</label>
+                                <input type="number" class="form-control" id="seats" placeholder="Enter number of seats">
+                            </div>
+                            <!-- Vehicle Age -->
+                            <div class="mb-3">
+                                <label for="vehicleAge" class="form-label">How Old is the Vehicle? (in years)</label>
+                                <input type="number" class="form-control" id="vehicleAge" placeholder="Enter vehicle age">
+                            </div>
+                            <!-- Model After 2020 -->
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="modelAfter2020">
+                                <label class="form-check-label" for="modelAfter2020">Model After 2020?</label>
+                            </div>
+                            <!-- Vehicle Image Upload -->
+                            <div class="mb-3">
+                                <label for="vehicleImage" class="form-label">Upload Vehicle Image</label>
+                                <input class="form-control" type="file" id="vehicleImage">
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary">Save Vehicle</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
