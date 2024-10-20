@@ -1,119 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-      integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT"
-      crossorigin="anonymous"
-    />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Register</title>
     <script>
-      function addMobileNumber() {
-        const container = document.getElementById("mobile-numbers");
-        const input = document.createElement("input");
-        input.type = "text";
-        input.className = "form-control mb-2";
-        input.name = "Mobile_Number[]"; // Use array notation for multiple inputs
-        input.placeholder = "Mobile Number";
-        container.appendChild(input);
+      // Function to add a new phone number input
+      function addPhoneNumberField() {
+        const phoneList = document.getElementById("phone-list");
+        const newPhoneDiv = document.createElement("div");
+        newPhoneDiv.classList.add("phone-entry");
+
+        newPhoneDiv.innerHTML = `
+        <input type="text" name="Mobile_Number" placeholder="Mobile Number" required />
+        <button type="button" onclick="removePhoneNumberField(this)">Remove</button>
+      `;
+
+        phoneList.appendChild(newPhoneDiv);
+      }
+
+      // Function to remove a phone number input
+      function removePhoneNumberField(button) {
+        button.parentElement.remove();
+      }
+
+      async function registerUser(event) {
+        event.preventDefault(); // Prevent form from submitting the traditional way
+
+        const form = event.target;
+        const formData = new FormData(form);
+
+        const phoneNumbers = [];
+        document
+          .querySelectorAll('input[name="Mobile_Number"]')
+          .forEach((input) => {
+            if (input.value) {
+              phoneNumbers.push(input.value);
+            }
+          });
+
+        const data = {
+          User_Name: formData.get("User_Name"),
+          Email: formData.get("Email"),
+          Pass_word: formData.get("Pass_word"),
+          DOB: formData.get("DOB"),
+          Address: formData.get("Address"),
+          Mobile_Number: phoneNumbers, // Submit all phone numbers as an array
+        };
+
+        try {
+          const response = await fetch("/auth/register", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+          });
+
+          if (response.ok) {
+            window.location.href = "/"; // Redirect to index page
+          } else {
+            alert("Registration failed.");
+          }
+        } catch (error) {
+          console.error("Error:", error);
+          alert("An error occurred. Please try again.");
+        }
       }
     </script>
   </head>
   <body>
-    <nav>
-      <h4>Website Name</h4>
-      <ul>
-        <li><a href="/">Home</a></li>
-        <li><a href="/login">Login</a></li>
-        <li><a href="/register">Register</a></li>
-      </ul>
-    </nav>
+    <h1>Register</h1>
+    <form id="registerForm" onsubmit="registerUser(event)">
+      <label for="User_Name">User Name:</label>
+      <input type="text" name="User_Name" id="User_Name" required /><br />
 
-    <div class="container mt-4">
-      <div class="card" style="width: 18rem">
-        <div class="card-header">Registration Form</div>
-        <div class="card-body">
-          <form action="/auth/register" method="POST">
-            <div class="mb-3">
-              <label for="User_ID-reg" class="form-label">User_ID</label>
-              <input
-                type="text"
-                class="form-control"
-                id="User_ID-reg"
-                name="User_ID"
-              />
-            </div>
-            <div class="mb-3">
-              <label for="User_Name-reg" class="form-label">User_Name</label>
-              <input
-                type="text"
-                class="form-control"
-                id="User_Name-reg"
-                name="User_Name"
-              />
-            </div>
-            <div class="mb-3">
-              <label for="Email-reg" class="form-label">Email</label>
-              <input
-                type="text"
-                class="form-control"
-                id="Email-reg"
-                name="Email"
-              />
-            </div>
-            <div class="mb-3">
-              <label for="Pass_word-reg" class="form-label">Pass_word</label>
-              <input
-                type="password"
-                class="form-control"
-                id="Pass_word-reg"
-                name="Pass_word"
-              />
-            </div>
-            <div class="mb-3">
-              <label for="DOB-reg" class="form-label">DOB</label>
-              <input type="date" class="form-control" id="DOB-reg" name="DOB" />
-            </div>
-            <div id="mobile-numbers" class="mb-3">
-              <label class="form-label">Mobile Numbers</label>
-              <input
-                type="text"
-                class="form-control mb-2"
-                name="Mobile_Number[]"
-              />
-              <!-- First Mobile Number -->
-            </div>
-            <button
-              type="button"
-              class="btn btn-secondary mb-3"
-              onclick="addMobileNumber()"
-            >
-              Add Another Mobile Number
-            </button>
-            <div class="mb-3">
-              <label for="Address-reg" class="form-label">Address</label>
-              <input
-                type="text"
-                class="form-control"
-                id="Address-reg"
-                name="Address"
-              />
-            </div>
-            <button type="submit" class="btn btn-primary">Submit</button>
-          </form>
+      <label for="Email">Email:</label>
+      <input type="email" name="Email" id="Email" required /><br />
+
+      <label for="Pass_word">Password:</label>
+      <input type="password" name="Pass_word" id="Pass_word" required /><br />
+
+      <label for="DOB">Date of Birth:</label>
+      <input type="date" name="DOB" id="DOB" required /><br />
+
+      <label for="Address">Address:</label>
+      <input type="text" name="Address" id="Address" required /><br />
+
+      <label for="Mobile_Number">Mobile Number(s):</label>
+      <div id="phone-list">
+        <div class="phone-entry">
+          <input
+            type="text"
+            name="Mobile_Number"
+            placeholder="Mobile Number"
+            required
+          />
         </div>
       </div>
-    </div>
+      <button type="button" onclick="addPhoneNumberField()">
+        Add Another Phone Number</button
+      ><br />
 
-    <div id="message-container"></div>
-    <script>
-      // Handle server messages if needed
-      const urlParams = new URLSearchParams(window.location.search);
-      const message = urlParams.get("message");
-      if (message) {
-        const messageContainer = document.getElementById("message-container");
-        messageContainer.innerHTML = `<h4 class="alert alert-danger mt-4">${message}</h4>`;
-      }
-    </script>
+      <button type="submit">Register</button>
+    </form>
   </body>
 </html>
