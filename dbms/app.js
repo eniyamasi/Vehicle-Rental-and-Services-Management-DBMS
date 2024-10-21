@@ -70,6 +70,11 @@ app.get("/add-vehicle", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "add-vehicle.html"));
 });
 
+// Serve the view bookings page
+app.get("/make-bookings", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "make-bookings.html"));
+});
+
 // Handle user registration
 app.post("/auth/register", async (req, res) => {
   const {
@@ -270,6 +275,17 @@ app.post("/add-vehicle", (req, res) => {
       return res.status(200).json({ message: "Vehicle added successfully." });
     }
   );
+});
+
+// Route to get all vehicles
+app.get("/api/vehicles", (req, res) => {
+  db.query("SELECT * FROM Vehicle", (error, results) => {
+    if (error) {
+      console.error("Error fetching vehicles:", error);
+      return res.status(500).json({ message: "Failed to fetch vehicles." });
+    }
+    res.json(results);
+  });
 });
 
 // Check session status to display username
