@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>View Bookings</title>
+    <script>
+      async function fetchVehicles() {
+        const response = await fetch("/api/vehicles");
+        const vehicles = await response.json();
+        console.log("Vehicles:", vehicles); // Debugging line
+
+        const vehicleList = document.getElementById("vehicle-list");
+        vehicleList.innerHTML = ""; // Clear existing content
+
+        vehicles.forEach((vehicle) => {
+          const vehicleItem = document.createElement("div");
+          vehicleItem.classList.add("vehicle-item");
+          vehicleItem.innerHTML = `
+                    <h3>${vehicle.rand} ${vehicle.Variant}</h3>
+                    <p>Seater: ${vehicle.Seater}</p>
+                    <p>AC Type: ${vehicle.AC_Type}</p>
+                    <p>Fuel: ${vehicle.Fuel}</p>
+                    <p>Fastag: ${vehicle.Fastag}</p>
+                    <p>Distance: ${vehicle.Distance} km</p>
+                    <p>Year: ${vehicle.Yr}</p>
+                `;
+          vehicleList.appendChild(vehicleItem);
+        });
+      }
+
+      // Call the fetchVehicles function when the page loads
+      window.onload = function () {
+        fetchVehicles();
+      };
+    </script>
+  </head>
+  <body>
+    <h1>View Bookings</h1>
+    <div id="vehicle-list"></div>
+    <button onclick="window.location.href='/'">Go Back</button>
+  </body>
+</html>
