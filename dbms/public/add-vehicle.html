@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Add Vehicle</title>
+    <script>
+      async function submitVehicle(event) {
+        event.preventDefault();
+
+        const form = event.target;
+        const formData = new FormData(form);
+
+        const data = {
+          Owner_ID: formData.get("Owner_ID"), // Get Owner_ID from form data
+          Seater: formData.get("Seater"),
+          AC_Type: formData.get("AC_Type"),
+          Fuel: formData.get("Fuel"),
+          Fastag: formData.get("Fastag"),
+          Distance: formData.get("Distance"),
+          Yr: formData.get("Yr"),
+          Variant: formData.get("Variant"),
+          rand: formData.get("rand"),
+        };
+
+        try {
+          const response = await fetch("/add-vehicle", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+          });
+
+          if (response.ok) {
+            alert("Vehicle added successfully.");
+            window.location.href = "/";
+          } else {
+            alert("Failed to add vehicle.");
+          }
+        } catch (error) {
+          console.error("Error:", error);
+          alert("An error occurred. Please try again.");
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <h1>Add Vehicle</h1>
+    <form onsubmit="submitVehicle(event)">
+      <input type="hidden" name="Owner_ID" value="<%= ownerId %>" />
+      <!-- Add Owner_ID here -->
+
+      <label for="Seater">Seater:</label>
+      <input type="number" name="Seater" id="Seater" required /><br />
+
+      <label for="AC_Type">AC Type:</label>
+      <select name="AC_Type" id="AC_Type" required>
+        <option value="AC">AC</option>
+        <option value="Non-AC">Non-AC</option></select
+      ><br />
+
+      <label for="Fuel">Fuel Type:</label>
+      <select name="Fuel" id="Fuel" required>
+        <option value="Petrol">Petrol</option>
+        <option value="Diesel">Diesel</option>
+        <option value="Electric">Electric</option></select
+      ><br />
+
+      <label for="Fastag">Fastag:</label>
+      <select name="Fastag" id="Fastag" required>
+        <option value="Available">Available</option>
+        <option value="Not Available">Not Available</option></select
+      ><br />
+
+      <label for="Distance">Distance (in km):</label>
+      <input type="number" name="Distance" id="Distance" required /><br />
+
+      <label for="Yr">Year:</label>
+      <input type="number" name="Yr" id="Yr" required /><br />
+
+      <label for="Variant">Variant:</label>
+      <input type="text" name="Variant" id="Variant" required /><br />
+
+      <label for="rand">Brand:</label>
+      <input type="text" name="rand" id="rand" required /><br />
+
+      <button type="submit">Add Vehicle</button>
+    </form>
+  </body>
+</html>

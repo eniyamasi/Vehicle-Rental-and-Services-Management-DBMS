@@ -5,6 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Register</title>
     <script>
+      function toggleFields() {
+        const role = document.getElementById("role").value;
+        const driverLicenseField = document.getElementById(
+          "drivers-license-field"
+        );
+
+        if (role === "renter") {
+          driverLicenseField.style.display = "block";
+        } else {
+          driverLicenseField.style.display = "none";
+        }
+      }
       // Function to add a new phone number input
       function addPhoneNumberField() {
         const phoneList = document.getElementById("phone-list");
@@ -46,6 +58,8 @@
           DOB: formData.get("DOB"),
           Address: formData.get("Address"),
           Mobile_Number: phoneNumbers, // Submit all phone numbers as an array
+          role: formData.get("role"), // Get role value
+          DriverLicense: formData.get("DriverLicense") || null, // Get DriverLicense value
         };
 
         try {
@@ -101,6 +115,18 @@
       <button type="button" onclick="addPhoneNumberField()">
         Add Another Phone Number</button
       ><br />
+      <label for="role">Role:</label>
+      <select name="role" id="role" onchange="toggleFields()" required>
+        <option value="owner">Owner</option>
+        <option value="renter">Renter</option></select
+      ><br />
+
+      <!-- Driver's License Number (Only for Renters) -->
+      <div id="drivers-license-field" style="display: none">
+        <label for="DriverLicense">Driver's License Number:</label>
+        <input type="text" name="DriverLicense" id="DriverLicense" />
+      </div>
+      <br />
 
       <button type="submit">Register</button>
     </form>

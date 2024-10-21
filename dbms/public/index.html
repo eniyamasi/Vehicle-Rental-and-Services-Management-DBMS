@@ -5,19 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Welcome</title>
     <script>
+      async function checkSession() {
+        const response = await fetch("/session-status");
+        const data = await response.json();
+        console.log("Role:", data.role); // Debugging line to check the role in the browser console
+
+        if (data.loggedIn) {
+          document.getElementById("welcome-message").textContent =
+            "Hi, " + data.username;
+
+          // Show owner section if the user is an owner
+          if (data.role === "owner") {
+            document.getElementById("owner-section").style.display = "block";
+          } else if (data.role === "renter") {
+            document.getElementById("renter-section").style.display = "block";
+          }
+        } else {
+          document.getElementById("welcome-message").textContent =
+            "Welcome, Guest!";
+        }
+      }
+
+      // Call the checkSession function when the page loads
       window.onload = function () {
-        fetch("/session-status")
-          .then((response) => response.json())
-          .then((data) => {
-            if (data.loggedIn) {
-              document.getElementById("auth-buttons").style.display = "none";
-              document.getElementById("welcome-message").textContent =
-                "Hi, " + data.username;
-            } else {
-              document.getElementById("welcome-message").textContent =
-                "Welcome, Guest!";
-            }
-          });
+        checkSession();
       };
     </script>
   </head>
@@ -28,5 +39,27 @@
       <a href="/register">Register</a>
     </div>
     <h2 id="welcome-message"></h2>
+
+    <!-- Owner-specific options -->
+    <div id="owner-section" style="display: none">
+      <h2>Owner Options</h2>
+      <button onclick="window.location.href='/view-requests'">
+        View Requests
+      </button>
+      <button onclick="window.location.href='/add-vehicle'">Add Vehicle</button>
+    </div>
+
+    <!-- Renter-specific options -->
+    <div id="renter-section" style="display: none">
+      <h2>Renter Options</h2>
+      <button onclick="window.location.href='/view-bookings'">
+        View Bookings
+      </button>
+      <button onclick="window.location.href='/make-booking'">
+        Make a Booking
+      </button>
+    </div>
+
+    <button onclick="window.location.href='/logout'">Logout</button>
   </body>
 </html>
