@@ -4,6 +4,88 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Add Vehicle</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        background-image: url('https://www.transparenttextures.com/patterns/asfalt-light.png'); /* Light grey textured background */
+        margin: 0;
+        padding: 20px;
+      }
+
+      /* Header styling */
+      header {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #007bff; /* Blue background */
+        color: white;
+        padding: 15px 20px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+        margin: 0 -20px 20px -20px; /* Stretch the header */
+      }
+
+      /* Centering the Add Vehicle title */
+      h1 {
+        font-size: 24px;
+        margin: 0;
+        text-align: center;
+        color: white;
+      }
+
+      form {
+        max-width: 500px;
+        margin: 0 auto;
+        background: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      label {
+        display: block;
+        margin-bottom: 5px;
+        color: #555;
+      }
+
+      input[type="number"],
+      input[type="text"],
+      select {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 15px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 16px;
+      }
+
+      button {
+        width: 100%;
+        padding: 10px;
+        background-color: #28a745;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+
+      button:hover {
+        background-color: #218838;
+      }
+
+      /* Responsive adjustments */
+      @media (max-width: 600px) {
+        form {
+          padding: 15px;
+        }
+
+        button {
+          font-size: 14px;
+        }
+      }
+    </style>
     <script>
       async function submitVehicle(event) {
         event.preventDefault();
@@ -46,44 +128,47 @@
     </script>
   </head>
   <body>
-    <h1>Add Vehicle</h1>
+    <header>
+      <h1>Add Vehicle</h1>
+    </header>
+
     <form onsubmit="submitVehicle(event)">
       <input type="hidden" name="Owner_ID" value="<%= ownerId %>" />
       <!-- Add Owner_ID here -->
 
       <label for="Seater">Seater:</label>
-      <input type="number" name="Seater" id="Seater" required /><br />
+      <input type="number" name="Seater" id="Seater" required />
 
       <label for="AC_Type">AC Type:</label>
       <select name="AC_Type" id="AC_Type" required>
         <option value="AC">AC</option>
-        <option value="Non-AC">Non-AC</option></select
-      ><br />
+        <option value="Non-AC">Non-AC</option>
+      </select>
 
       <label for="Fuel">Fuel Type:</label>
       <select name="Fuel" id="Fuel" required>
         <option value="Petrol">Petrol</option>
         <option value="Diesel">Diesel</option>
-        <option value="Electric">Electric</option></select
-      ><br />
+        <option value="Electric">Electric</option>
+      </select>
 
       <label for="Fastag">Fastag:</label>
       <select name="Fastag" id="Fastag" required>
         <option value="Available">Available</option>
-        <option value="Not Available">Not Available</option></select
-      ><br />
+        <option value="Not Available">Not Available</option>
+      </select>
 
       <label for="Distance">Distance (in km):</label>
-      <input type="number" name="Distance" id="Distance" required /><br />
+      <input type="number" name="Distance" id="Distance" required />
 
       <label for="Yr">Year:</label>
-      <input type="number" name="Yr" id="Yr" required /><br />
+      <input type="number" name="Yr" id="Yr" required />
 
       <label for="Variant">Variant:</label>
-      <input type="text" name="Variant" id="Variant" required /><br />
+      <input type="text" name="Variant" id="Variant" required />
 
       <label for="rand">Brand:</label>
-      <input type="text" name="rand" id="rand" required /><br />
+      <input type="text" name="rand" id="rand" required />
 
       <button type="submit">Add Vehicle</button>
     </form>
