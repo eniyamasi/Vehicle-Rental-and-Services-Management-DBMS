@@ -75,6 +75,10 @@ app.get("/make-bookings", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "make-bookings.html"));
 });
 
+app.get("/view-bookings", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "view-bookings.html"));
+});
+
 // Handle user registration
 app.post("/auth/register", async (req, res) => {
   const {
@@ -288,6 +292,49 @@ app.get("/api/vehicles", (req, res) => {
   });
 });
 
+// Handle booking creation
+app.post("/book-vehicle", (req, res) => {
+  const { Vehicle_ID, Start_date, End_date, Rental_Amount } = req.body;
+  const Renter_ID = req.session.renterId;
+  console.log("Bokking request body:", req.body);
+
+  if (!Renter_ID) {
+    return res.status(401).json({
+      message: "You must be logged in as a renter to book a vehicle.",
+    });
+  }
+  const startDate = new Date(Start_date);
+  const endDate = new Date(End_date);
+
+  if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+    return res.status(400).json({ message: "Invalid date format." });
+  }
+
+  if (startDate >= endDate) {
+    return res
+      .status(400)
+      .json({ message: "End date must be after the start date." });
+  }
+  const Rental_ID = uuidv4(); // Generate unique rental ID
+  db.query(
+    "INSERT INTO Rental SET ?",
+    {
+      Rental_ID,
+      Renter_ID,
+      Vehicle_ID,
+      Rental_Amount,
+      Start_date,
+      End_date,
+    },
+    (error, result) => {
+      if (error) {
+        console.log(error);
+        return res.status(500).json({ message: "Failed to book vehicle." });
+      }
+      return res.status(200).json({ message: "Vehicle Booked successfully." });
+    }
+  );
+});
 // Check session status to display username
 app.get("/session-status", (req, res) => {
   if (req.session.username) {
