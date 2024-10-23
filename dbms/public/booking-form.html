@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Booking Form</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+      }
+
+      h2 {
+        margin-bottom: 20px;
+      }
+
+      form {
+        border: 1px solid #0056b3;
+        padding: 15px;
+        border-radius: 5px;
+        max-width: 400px;
+      }
+
+      label {
+        margin-top: 10px;
+        display: block;
+      }
+
+      input[type="text"],
+      input[type="date"],
+      input[type="number"] {
+        width: 100%;
+        padding: 10px;
+        margin-top: 5px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+
+      button {
+        background-color: #0056b3;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-top: 15px;
+      }
+
+      button:hover {
+        background-color: #003d80;
+      }
+
+      .message {
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Booking Form</h2>
+    <form id="booking-form">
+      <input type="hidden" id="vehicle-id" name="vehicle_id" />
+
+      <label for="start-date">Start Date:</label>
+      <input type="date" id="start-date" name="start_date" required />
+
+      <label for="end-date">End Date:</label>
+      <input type="date" id="end-date" name="end_date" required />
+
+      <label for="rental-amount">Rental Amount:</label>
+      <input type="number" id="rental-amount" name="rental_amount" required />
+
+      <button type="submit">Submit Booking</button>
+    </form>
+
+    <div class="message" id="message"></div>
+
+    <script>
+      // Get vehicle ID from URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const vehicleId = urlParams.get("vehicle_id");
+      document.getElementById("vehicle-id").value = vehicleId;
+
+      // Handle form submission
+      document
+        .getElementById("booking-form")
+        .addEventListener("submit", async (event) => {
+          event.preventDefault(); // Prevent default form submission
+
+          const startDate = new Date(
+            document.getElementById("start-date").value + "T00:00:00"
+          );
+          const endDate = new Date(
+            document.getElementById("end-date").value + "T00:00:00"
+          );
+
+          console.log("Start Date:", startDate); // Should output in YYYY-MM-DD format
+          console.log("End Date:", endDate);
+          if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+            document.getElementById("message").textContent =
+              "Please select valid dates.";
+            return;
+          }
+
+          if (startDate > endDate) {
+            document.getElementById("message").textContent =
+              "End date must be after the start date.";
+            return;
+          }
+          const formData = new FormData(event.target);
+          const data = Object.fromEntries(formData);
+
+          try {
+            const response = await fetch("/book-vehicle", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(data),
+            });
+
+            const result = await response.json();
+            document.getElementById("message").textContent = result.message;
+
+            if (response.ok) {
+              // Clear form fields after successful booking
+              document.getElementById("booking-form").reset();
+            }
+          } catch (error) {
+            console.error("Error:", error);
+            document.getElementById("message").textContent =
+              "Error occurred while booking the vehicle.";
+          }
+        });
+    </script>
+  </body>
+</html>

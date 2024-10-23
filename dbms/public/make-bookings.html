@@ -3,41 +3,101 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>View Bookings</title>
+    <title>Make a Booking</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+      }
+
+      h2 {
+        margin-bottom: 20px;
+      }
+
+      .vehicle {
+        border: 1px solid #0056b3;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+      }
+
+      .vehicle h3 {
+        margin: 0;
+      }
+
+      .make-booking-btn {
+        background-color: #0056b3;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-top: 10px;
+      }
+
+      .make-booking-btn:hover {
+        background-color: #003d80;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Select a Vehicle to Make a Booking</h2>
+
+    <!-- Container for the vehicle list -->
+    <div id="vehicle-list"></div>
+
     <script>
       async function fetchVehicles() {
-        const response = await fetch("/api/vehicles");
-        const vehicles = await response.json();
-        console.log("Vehicles:", vehicles); // Debugging line
+        try {
+          const response = await fetch("/api/vehicles");
+          if (!response.ok) {
+            throw new Error("Failed to fetch vehicles");
+          }
+          const vehicles = await response.json();
+          displayVehicles(vehicles);
+        } catch (error) {
+          console.error("Error:", error);
+          document.getElementById(
+            "vehicle-list"
+          ).innerHTML = `<p>Error fetching vehicles. Please try again later.</p>`;
+        }
+      }
 
+      function displayVehicles(vehicles) {
         const vehicleList = document.getElementById("vehicle-list");
         vehicleList.innerHTML = ""; // Clear existing content
 
         vehicles.forEach((vehicle) => {
-          const vehicleItem = document.createElement("div");
-          vehicleItem.classList.add("vehicle-item");
-          vehicleItem.innerHTML = `
-                    <h3>${vehicle.rand} ${vehicle.Variant}</h3>
-                    <p>Seater: ${vehicle.Seater}</p>
-                    <p>AC Type: ${vehicle.AC_Type}</p>
-                    <p>Fuel: ${vehicle.Fuel}</p>
-                    <p>Fastag: ${vehicle.Fastag}</p>
-                    <p>Distance: ${vehicle.Distance} km</p>
-                    <p>Year: ${vehicle.Yr}</p>
+          // Create vehicle container
+          const vehicleDiv = document.createElement("div");
+          vehicleDiv.classList.add("vehicle");
+
+          // Vehicle details
+          vehicleDiv.innerHTML = `
+                    <h3>${vehicle.Variant}</h3>
+                    <p><strong>Seater:</strong> ${vehicle.Seater}</p>
+                    <p><strong>AC Type:</strong> ${vehicle.AC_Type}</p>
+                    <p><strong>Fuel:</strong> ${vehicle.Fuel}</p>
+                    <p><strong>Fastag:</strong> ${vehicle.Fastag}</p>
+                    <p><strong>Distance:</strong> ${vehicle.Distance} km</p>
+                    <p><strong>Year:</strong> ${vehicle.Yr}</p>
+                    <button class="make-booking-btn" onclick="makeBooking('${vehicle.Vehicle_ID}')">Make Booking</button>
                 `;
-          vehicleList.appendChild(vehicleItem);
+
+          vehicleList.appendChild(vehicleDiv);
         });
       }
 
-      // Call the fetchVehicles function when the page loads
+      function makeBooking(vehicleId) {
+        // Redirect to booking form with vehicle ID
+        window.location.href = `/booking-form.html?vehicle_id=${vehicleId}`;
+      }
+
+      // Call fetchVehicles when the page loads
       window.onload = function () {
         fetchVehicles();
       };
     </script>
-  </head>
-  <body>
-    <h1>View Bookings</h1>
-    <div id="vehicle-list"></div>
-    <button onclick="window.location.href='/'">Go Back</button>
   </body>
 </html>
