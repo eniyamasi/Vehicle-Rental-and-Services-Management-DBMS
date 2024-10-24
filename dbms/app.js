@@ -292,30 +292,47 @@ app.get("/api/vehicles", (req, res) => {
   });
 });
 
+app.get("/api/bookings", (req, res) => {
+  db.query(
+    "SELECT Vehicle.*, Rental.* FROM Vehicle INNER JOIN Rental ON Vehicle.Vehicle_ID = Rental.Vehicle_ID",
+    (error, results) => {
+      if (error) {
+        console.error("Error fetching bookings:", error);
+        return res.status(500).json({ message: "Failed to fetch bookings." });
+      }
+      // Map results to a structure that includes nested 'Vehicle' object
+      const bookings = results.map((result) => ({
+        Start_date: result.Start_date,
+        End_date: result.End_date,
+        Rental_Amount: result.Rental_Amount,
+        Vehicle: {
+          Variant: result.Variant,
+          rand: result.rand,
+          Fuel: result.Fuel,
+          Seater: result.Seater,
+          AC_Type: result.AC_Type,
+          Distance: result.Distance,
+        },
+      }));
+      res.json(bookings);
+    }
+  );
+});
+
 // Handle booking creation
 app.post("/book-vehicle", (req, res) => {
   const { Vehicle_ID, Start_date, End_date, Rental_Amount } = req.body;
   const Renter_ID = req.session.renterId;
-  console.log("Bokking request body:", req.body);
+  //console.log("Booking request body:", req.body);
 
   if (!Renter_ID) {
     return res.status(401).json({
       message: "You must be logged in as a renter to book a vehicle.",
     });
   }
-  const startDate = new Date(Start_date);
-  const endDate = new Date(End_date);
 
-  if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-    return res.status(400).json({ message: "Invalid date format." });
-  }
-
-  if (startDate >= endDate) {
-    return res
-      .status(400)
-      .json({ message: "End date must be after the start date." });
-  }
   const Rental_ID = uuidv4(); // Generate unique rental ID
+
   db.query(
     "INSERT INTO Rental SET ?",
     {
@@ -328,10 +345,11 @@ app.post("/book-vehicle", (req, res) => {
     },
     (error, result) => {
       if (error) {
-        console.log(error);
+        console.log("Error inserting data:", error);
         return res.status(500).json({ message: "Failed to book vehicle." });
       }
-      return res.status(200).json({ message: "Vehicle Booked successfully." });
+      console.log("Data inserted successfully");
+      return res.status(200).json({ message: "Vehicle booked successfully." });
     }
   );
 });
