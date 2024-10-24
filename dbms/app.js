@@ -79,6 +79,10 @@ app.get("/view-bookings", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "view-bookings.html"));
 });
 
+app.get("/view-requests", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "view-requests.html"));
+});
+
 // Handle user registration
 app.post("/auth/register", async (req, res) => {
   const {
@@ -292,6 +296,19 @@ app.get("/api/vehicles", (req, res) => {
   });
 });
 
+app.get("/api/rental-requests", (req, res) => {
+  db.query(
+    "SELECT * FROM Rental WHERE StatusofRental = 'pending'",
+    (error, results) => {
+      if (error) {
+        console.error("Error fetching vehicles:", error);
+        return res.status(500).json({ message: "Failed to fetch vehicles." });
+      }
+      res.json(results);
+    }
+  );
+});
+
 app.get("/api/bookings", (req, res) => {
   db.query(
     "SELECT Vehicle.*, Rental.* FROM Vehicle INNER JOIN Rental ON Vehicle.Vehicle_ID = Rental.Vehicle_ID",
@@ -353,6 +370,21 @@ app.post("/book-vehicle", (req, res) => {
     }
   );
 });
+
+app.post("/api/update-rental-status/:rentalId", (req, res) => {
+  const { Rental_ID } = req.params;
+  const { StatusofRental } = req.body;
+
+  // SQL Query to update status
+  const query = `UPDATE Rental SET StatusofRental = ? WHERE Rental_ID = ?`;
+  db.query(query, [StatusofRental, Rental_ID], function (err) {
+    if (err) {
+      return res.status(500).send("Error updating rental status");
+    }
+    res.status(200).send("Status updated successfully");
+  });
+});
+
 // Check session status to display username
 app.get("/session-status", (req, res) => {
   if (req.session.username) {
