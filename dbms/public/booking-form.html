@@ -7,24 +7,45 @@
     <style>
       body {
         font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        background-image: url("https://www.transparenttextures.com/patterns/asfalt-light.png"); /* Light grey textured background */
         margin: 0;
         padding: 20px;
       }
 
+      /* Header styling */
+      header {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #007bff; /* Blue background */
+        color: white;
+        padding: 15px 20px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+        margin: 0 -20px 20px -20px; /* Stretch the header */
+      }
+
+      /* Centering the Booking Form title */
       h2 {
-        margin-bottom: 20px;
+        font-size: 24px;
+        margin: 0;
+        text-align: center;
+        color: white;
       }
 
       form {
-        border: 1px solid #0056b3;
-        padding: 15px;
-        border-radius: 5px;
-        max-width: 400px;
+        max-width: 500px;
+        margin: 0 auto;
+        background: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
       }
 
       label {
-        margin-top: 10px;
         display: block;
+        margin-bottom: 5px;
+        color: #555;
       }
 
       input[type="text"],
@@ -32,19 +53,22 @@
       input[type="number"] {
         width: 100%;
         padding: 10px;
-        margin-top: 5px;
+        margin-bottom: 15px;
         border: 1px solid #ccc;
-        border-radius: 5px;
+        border-radius: 4px;
+        font-size: 16px;
       }
 
       button {
+        width: 100%;
+        padding: 10px;
         background-color: #0056b3;
         color: white;
         border: none;
-        padding: 10px 15px;
-        border-radius: 5px;
+        border-radius: 4px;
+        font-size: 16px;
         cursor: pointer;
-        margin-top: 15px;
+        transition: background-color 0.3s;
       }
 
       button:hover {
@@ -53,85 +77,83 @@
 
       .message {
         margin-top: 20px;
+        color: #28a745; /* Green text for messages */
+      }
+
+      /* Responsive adjustments */
+      @media (max-width: 600px) {
+        form {
+          padding: 15px;
+        }
+
+        button {
+          font-size: 14px;
+        }
       }
     </style>
+    <script>
+      async function submitBooking(event) {
+        event.preventDefault(); // Prevent default form submission
+
+        const formData = new FormData(event.target);
+        const data = Object.fromEntries(formData);
+
+        try {
+          const response = await fetch("/book-vehicle", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+          });
+
+          const result = await response.json();
+          document.getElementById("message").textContent = result.message;
+
+          if (response.ok) {
+            // Clear form fields after successful booking
+            document.getElementById("booking-form").reset();
+          }
+        } catch (error) {
+          console.error("Error:", error);
+          document.getElementById("message").textContent =
+            "Error occurred while booking the vehicle.";
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        // Get vehicle ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const vehicleId = urlParams.get("vehicle_id");
+        document.getElementById("vehicle-id").value = vehicleId;
+
+        // Handle form submission
+        document
+          .getElementById("booking-form")
+          .addEventListener("submit", submitBooking);
+      });
+    </script>
   </head>
   <body>
-    <h2>Booking Form</h2>
+    <header>
+      <h2>Booking Form</h2>
+    </header>
+
     <form id="booking-form">
-      <input type="hidden" id="vehicle-id" name="vehicle_id" />
+      <input type="hidden" id="vehicle-id" name="Vehicle_ID" />
 
       <label for="start-date">Start Date:</label>
-      <input type="date" id="start-date" name="start_date" required />
+      <input type="date" id="start-date" name="Start_date" required />
 
       <label for="end-date">End Date:</label>
-      <input type="date" id="end-date" name="end_date" required />
+      <input type="date" id="end-date" name="End_date" required />
 
       <label for="rental-amount">Rental Amount:</label>
-      <input type="number" id="rental-amount" name="rental_amount" required />
+      <input type="number" id="rental-amount" name="Rental_Amount" required />
 
       <button type="submit">Submit Booking</button>
     </form>
 
     <div class="message" id="message"></div>
-
-    <script>
-      // Get vehicle ID from URL
-      const urlParams = new URLSearchParams(window.location.search);
-      const vehicleId = urlParams.get("vehicle_id");
-      document.getElementById("vehicle-id").value = vehicleId;
-
-      // Handle form submission
-      document
-        .getElementById("booking-form")
-        .addEventListener("submit", async (event) => {
-          event.preventDefault(); // Prevent default form submission
-
-          const startDate = new Date(
-            document.getElementById("start-date").value + "T00:00:00"
-          );
-          const endDate = new Date(
-            document.getElementById("end-date").value + "T00:00:00"
-          );
-
-          console.log("Start Date:", startDate); // Should output in YYYY-MM-DD format
-          console.log("End Date:", endDate);
-          if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-            document.getElementById("message").textContent =
-              "Please select valid dates.";
-            return;
-          }
-
-          if (startDate > endDate) {
-            document.getElementById("message").textContent =
-              "End date must be after the start date.";
-            return;
-          }
-          const formData = new FormData(event.target);
-          const data = Object.fromEntries(formData);
-
-          try {
-            const response = await fetch("/book-vehicle", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify(data),
-            });
-
-            const result = await response.json();
-            document.getElementById("message").textContent = result.message;
-
-            if (response.ok) {
-              // Clear form fields after successful booking
-              document.getElementById("booking-form").reset();
-            }
-          } catch (error) {
-            console.error("Error:", error);
-            document.getElementById("message").textContent =
-              "Error occurred while booking the vehicle.";
-          }
-        });
-    </script>
   </body>
 </html>

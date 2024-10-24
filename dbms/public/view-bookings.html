@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>View Bookings</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f4f4f4;
+      }
+
+      h2 {
+        color: #0056b3;
+        margin-bottom: 20px;
+      }
+
+      .booking-container {
+        margin-bottom: 30px;
+      }
+
+      .booking {
+        border: 1px solid #0056b3;
+        padding: 15px;
+        margin-bottom: 15px;
+        background-color: #fff;
+        border-radius: 5px;
+      }
+
+      .booking h3 {
+        margin: 0 0 10px;
+        color: #0056b3;
+      }
+
+      .booking p {
+        margin: 5px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Current Bookings</h2>
+    <div id="current-bookings" class="booking-container"></div>
+
+    <h2>Completed Bookings</h2>
+    <div id="completed-bookings" class="booking-container"></div>
+
+    <script>
+      async function fetchBookings() {
+        try {
+          const response = await fetch("/api/bookings"); // Fetch all bookings for the renter
+          if (!response.ok) {
+            throw new Error("Failed to fetch bookings");
+          }
+          const bookings = await response.json();
+          console.log("Fetched Bookings:", bookings);
+          displayBookings(bookings);
+        } catch (error) {
+          console.error("Error:", error);
+          document.getElementById(
+            "current-bookings"
+          ).innerHTML = `<p>Error fetching bookings. Please try again later.</p>`;
+        }
+      }
+
+      function displayBookings(bookings) {
+        const currentBookingsContainer =
+          document.getElementById("current-bookings");
+        const completedBookingsContainer =
+          document.getElementById("completed-bookings");
+
+        currentBookingsContainer.innerHTML = "";
+        completedBookingsContainer.innerHTML = "";
+
+        const today = new Date();
+        const todayISO = today.toISOString().split("T")[0];
+        console.log(todayISO);
+
+        bookings.forEach((booking) => {
+          const startDateISO = booking.Start_date.split("T")[0];
+          const endDateISO = booking.End_date.split("T")[0];
+          console.log(startDateISO);
+          console.log(endDateISO);
+          const bookingDiv = document.createElement("div");
+          bookingDiv.classList.add("booking");
+
+          // Display vehicle details and booking information
+          bookingDiv.innerHTML = `
+            <h3>${booking.Vehicle.Variant}</h3>
+            <h4>${booking.Vehicle.rand}</h4>
+            <p><strong>Start Date:</strong> ${
+              booking.Start_date.split("T")[0]
+            }</p>
+            <p><strong>End Date:</strong> ${booking.End_date.split("T")[0]}</p>
+            <p><strong>Rental Amount:</strong> ₹${booking.Rental_Amount}</p>
+            <p><strong>Fuel Type:</strong> ${booking.Vehicle.Fuel}</p>
+            <p><strong>Seater:</strong> ${booking.Vehicle.Seater}</p>
+            <p><strong>AC Type:</strong> ${booking.Vehicle.AC_Type}</p>
+            <p><strong>Distance Travelled:</strong> ${
+              booking.Vehicle.Distance
+            } km</p>
+          `;
+
+          // Separate into current and completed bookings
+          if (todayISO > endDateISO) {
+            completedBookingsContainer.appendChild(bookingDiv);
+          } else {
+            currentBookingsContainer.appendChild(bookingDiv);
+          }
+        });
+
+        // In case no bookings found for current or completed
+        if (currentBookingsContainer.innerHTML === "") {
+          currentBookingsContainer.innerHTML =
+            "<p>No current bookings found.</p>";
+        }
+        if (completedBookingsContainer.innerHTML === "") {
+          completedBookingsContainer.innerHTML =
+            "<p>No completed bookings found.</p>";
+        }
+      }
+
+      // Call fetchBookings when the page loads
+      window.onload = function () {
+        fetchBookings();
+      };
+    </script>
+  </body>
+</html>
