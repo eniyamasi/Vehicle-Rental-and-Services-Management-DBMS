@@ -322,6 +322,7 @@ app.get("/api/bookings", (req, res) => {
         Start_date: result.Start_date,
         End_date: result.End_date,
         Rental_Amount: result.Rental_Amount,
+        StatusofRental: result.StatusofRental,
         Vehicle: {
           Variant: result.Variant,
           rand: result.rand,
@@ -348,39 +349,98 @@ app.post("/book-vehicle", (req, res) => {
     });
   }
 
-  const Rental_ID = uuidv4(); // Generate unique rental ID
+  const availabilityCheckSql = `
+    SELECT COUNT(*) AS count
+    FROM Rental
+    WHERE Vehicle_ID = ? 
+      AND StatusofRental = 'accepted'
+      AND (
+        (Start_date <= ? AND End_date >= ?) OR 
+        (Start_date <= ? AND End_date >= ?) OR
+        (Start_date >= ? AND End_date <= ?)
+      )
+  `;
 
   db.query(
-    "INSERT INTO Rental SET ?",
-    {
-      Rental_ID,
-      Renter_ID,
+    availabilityCheckSql,
+    [
       Vehicle_ID,
-      Rental_Amount,
       Start_date,
       End_date,
-    },
-    (error, result) => {
+      Start_date,
+      End_date,
+      Start_date,
+      End_date,
+    ],
+    (error, results) => {
       if (error) {
-        console.log("Error inserting data:", error);
-        return res.status(500).json({ message: "Failed to book vehicle." });
+        console.log("Error checking availability:", error);
+        return res
+          .status(500)
+          .json({ message: "Error checking vehicle availability." });
       }
-      console.log("Data inserted successfully");
-      return res.status(200).json({ message: "Vehicle booked successfully." });
+
+      const { count } = results[0];
+      if (count > 0) {
+        // Vehicle is already booked
+        return res
+          .status(400)
+          .json({ message: "Vehicle not available during these dates." });
+      }
+
+      const Rental_ID = uuidv4(); // Generate unique rental ID
+
+      db.query(
+        "INSERT INTO Rental SET ?",
+        {
+          Rental_ID,
+          Renter_ID,
+          Vehicle_ID,
+          Rental_Amount,
+          Start_date,
+          End_date,
+        },
+        (error, result) => {
+          if (error) {
+            console.log("Error inserting data:", error);
+            return res.status(500).json({ message: "Failed to book vehicle." });
+          }
+          console.log("Data inserted successfully");
+          return res
+            .status(200)
+            .json({ message: "Waiting for Owner Approval." });
+        }
+      );
     }
   );
 });
 
 app.post("/api/update-rental-status/:rentalId", (req, res) => {
-  const { Rental_ID } = req.params;
+  const { rentalId } = req.params; // Use rentalId from the route parameter
   const { StatusofRental } = req.body;
+
+  console.log(`Updating rental ${rentalId} with status: ${StatusofRental}`); // Log for debugging
 
   // SQL Query to update status
   const query = `UPDATE Rental SET StatusofRental = ? WHERE Rental_ID = ?`;
-  db.query(query, [StatusofRental, Rental_ID], function (err) {
+
+  // Check if rentalId is valid and not undefined/null
+  if (!rentalId) {
+    return res.status(400).send("Rental ID is required");
+  }
+
+  // Execute the query
+  db.query(query, [StatusofRental, rentalId], function (err, result) {
     if (err) {
+      console.error("Error updating rental status:", err); // Log the error
       return res.status(500).send("Error updating rental status");
     }
+
+    // Check if any rows were affected/updated
+    if (result.affectedRows === 0) {
+      return res.status(404).send("Rental ID not found");
+    }
+
     res.status(200).send("Status updated successfully");
   });
 });
