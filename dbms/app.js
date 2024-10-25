@@ -46,7 +46,14 @@ app.use(express.json());
 
 // Serve index.html with session check for username
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+  if (req.session.username) {
+    res.send(
+      `<h1>Hi, ${req.session.username}</h1>
+      <a href="/logout">Logout</a>`
+    );
+  } else {
+    res.sendFile(path.join(__dirname, "public", "index.html"));
+  }
 });
 
 // Serve register.html
@@ -54,10 +61,43 @@ app.get("/register", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "register.html"));
 });
 
+// Serve the login page
+app.get("/login", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "login.html"));
+});
+
+app.get("/add-vehicle", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "add-vehicle.html"));
+});
+
+// Serve the view bookings page
+app.get("/make-bookings", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "make-bookings.html"));
+});
+
+app.get("/view-bookings", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "view-bookings.html"));
+});
+
+app.get("/view-requests", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "view-requests.html"));
+});
+
 // Handle user registration
 app.post("/auth/register", async (req, res) => {
-  const { User_Name, Email, Pass_word, DOB, Address, Mobile_Number } = req.body;
+  const {
+    User_Name,
+    Email,
+    Pass_word,
+    DOB,
+    Address,
+    Mobile_Number,
+    role,
+    DriverLicense,
+  } = req.body;
   const User_ID = uuidv4(); // Generate a unique User_ID
+  const Renter_ID = uuidv4();
+  const Owner_ID = uuidv4();
 
   db.query(
     "SELECT Email FROM User WHERE Email = ?",
@@ -99,9 +139,36 @@ app.post("/auth/register", async (req, res) => {
               );
             }
           });
+          console.log("Role:", role);
+          console.log("DriverLicense:", DriverLicense);
+          // Check the role of the user
+          if (role === "owner") {
+            const Owner_ID = uuidv4(); // Generate Owner ID
+            db.query(
+              "INSERT INTO Owners SET ?",
+              { Owner_ID, User_ID },
+              (err, result) => {
+                if (err) {
+                  console.log(err);
+                }
+              }
+            );
+          } else if (role === "renter") {
+            const Renter_ID = uuidv4(); // Generate Renter ID
+            db.query(
+              "INSERT INTO Renter SET ?",
+              { Renter_ID, User_ID, DriverLicense },
+              (err, result) => {
+                if (err) {
+                  console.log(err);
+                }
+              }
+            );
+          }
 
           // Set session with username after registration
           req.session.username = User_Name;
+          req.session.role = role;
 
           // Redirect to the index page
           return res.redirect("/");
@@ -111,13 +178,295 @@ app.post("/auth/register", async (req, res) => {
   );
 });
 
+app.post("/auth/login", (req, res) => {
+  const { Email, Pass_word } = req.body;
+  console.log("Login attempt with email:", Email);
+
+  db.query(
+    "SELECT * FROM User WHERE Email = ? AND Pass_word = ?",
+    [Email, Pass_word],
+    (error, result) => {
+      if (error) {
+        console.log("Error in first query:", error);
+        return res.redirect("/login?message=An%20error%20occurred");
+      }
+
+      if (result.length > 0) {
+        const User_ID = result[0].User_ID;
+        const User_Name = result[0].User_Name;
+        console.log("User found:", User_Name);
+
+        // Check if user is in Owners table
+        db.query(
+          "SELECT * FROM Owners WHERE User_ID = ?",
+          [User_ID],
+          (err, ownerResult) => {
+            if (err) {
+              console.log("Error in Owners query:", err);
+              return res.redirect("/login?message=An%20error%20occurred");
+            }
+
+            console.log("Owner query result:", ownerResult); // Debugging line
+
+            if (ownerResult.length > 0) {
+              req.session.role = "owner";
+              req.session.username = User_Name;
+              req.session.ownerId = ownerResult[0].Owner_ID; // Ensure this is set
+              console.log("User is an owner, redirecting...");
+              return res.redirect("/"); // Redirect after setting the session
+            } else {
+              // Check if user is in Renter table
+              db.query(
+                "SELECT * FROM Renter WHERE User_ID = ?",
+                [User_ID],
+                (err, renterResult) => {
+                  if (err) {
+                    console.log("Error in Renter query:", err);
+                    return res.redirect("/login?message=An%20error%20occurred");
+                  }
+
+                  console.log("Renter query result:", renterResult); // Debugging line
+
+                  if (renterResult.length > 0) {
+                    req.session.role = "renter";
+                    req.session.username = User_Name; // Ensure this is set
+                    req.session.renterId = renterResult[0].Renter_ID;
+                    console.log("User is a renter, redirecting...");
+                    return res.redirect("/"); // Redirect after setting the session
+                  } else {
+                    req.session.role = "guest"; // Fallback role
+                    console.log(
+                      "No specific role found for user, redirecting as guest"
+                    );
+                    req.session.username = User_Name; // Set username
+                    return res.redirect("/"); // Redirect for guest
+                  }
+                }
+              );
+            }
+          }
+        );
+      } else {
+        // If login fails, redirect to login page with an error message
+        console.log("Invalid login credentials");
+        return res.redirect("/login?message=Invalid%20credentials");
+      }
+    }
+  );
+});
+
+app.post("/add-vehicle", (req, res) => {
+  const { Seater, AC_Type, Fuel, Fastag, Distance, Yr, Variant, rand } =
+    req.body;
+  const Vehicle_ID = uuidv4(); // Generate unique vehicle ID
+  const Owner_ID = req.session.ownerId; // Get Owner_ID from session
+
+  db.query(
+    "INSERT INTO Vehicle SET ?",
+    {
+      Vehicle_ID,
+      Owner_ID, // Use Owner_ID instead of User_ID
+      Seater,
+      AC_Type,
+      Fuel,
+      Fastag,
+      Distance,
+      Yr,
+      Variant,
+      rand,
+    },
+    (error, result) => {
+      if (error) {
+        console.log(error);
+        return res.status(500).json({ message: "Failed to add vehicle." });
+      }
+      return res.status(200).json({ message: "Vehicle added successfully." });
+    }
+  );
+});
+
+// Route to get all vehicles
+app.get("/api/vehicles", (req, res) => {
+  db.query("SELECT * FROM Vehicle", (error, results) => {
+    if (error) {
+      console.error("Error fetching vehicles:", error);
+      return res.status(500).json({ message: "Failed to fetch vehicles." });
+    }
+    res.json(results);
+  });
+});
+
+app.get("/api/rental-requests", (req, res) => {
+  db.query(
+    "SELECT * FROM Rental WHERE StatusofRental = 'pending'",
+    (error, results) => {
+      if (error) {
+        console.error("Error fetching vehicles:", error);
+        return res.status(500).json({ message: "Failed to fetch vehicles." });
+      }
+      res.json(results);
+    }
+  );
+});
+
+app.get("/api/bookings", (req, res) => {
+  db.query(
+    "SELECT Vehicle.*, Rental.* FROM Vehicle INNER JOIN Rental ON Vehicle.Vehicle_ID = Rental.Vehicle_ID",
+    (error, results) => {
+      if (error) {
+        console.error("Error fetching bookings:", error);
+        return res.status(500).json({ message: "Failed to fetch bookings." });
+      }
+      // Map results to a structure that includes nested 'Vehicle' object
+      const bookings = results.map((result) => ({
+        Start_date: result.Start_date,
+        End_date: result.End_date,
+        Rental_Amount: result.Rental_Amount,
+        StatusofRental: result.StatusofRental,
+        Vehicle: {
+          Variant: result.Variant,
+          rand: result.rand,
+          Fuel: result.Fuel,
+          Seater: result.Seater,
+          AC_Type: result.AC_Type,
+          Distance: result.Distance,
+        },
+      }));
+      res.json(bookings);
+    }
+  );
+});
+
+// Handle booking creation
+app.post("/book-vehicle", (req, res) => {
+  const { Vehicle_ID, Start_date, End_date, Rental_Amount } = req.body;
+  const Renter_ID = req.session.renterId;
+  //console.log("Booking request body:", req.body);
+
+  if (!Renter_ID) {
+    return res.status(401).json({
+      message: "You must be logged in as a renter to book a vehicle.",
+    });
+  }
+
+  const availabilityCheckSql = `
+    SELECT COUNT(*) AS count
+    FROM Rental
+    WHERE Vehicle_ID = ? 
+      AND StatusofRental = 'accepted'
+      AND (
+        (Start_date <= ? AND End_date >= ?) OR 
+        (Start_date <= ? AND End_date >= ?) OR
+        (Start_date >= ? AND End_date <= ?)
+      )
+  `;
+
+  db.query(
+    availabilityCheckSql,
+    [
+      Vehicle_ID,
+      Start_date,
+      End_date,
+      Start_date,
+      End_date,
+      Start_date,
+      End_date,
+    ],
+    (error, results) => {
+      if (error) {
+        console.log("Error checking availability:", error);
+        return res
+          .status(500)
+          .json({ message: "Error checking vehicle availability." });
+      }
+
+      const { count } = results[0];
+      if (count > 0) {
+        // Vehicle is already booked
+        return res
+          .status(400)
+          .json({ message: "Vehicle not available during these dates." });
+      }
+
+      const Rental_ID = uuidv4(); // Generate unique rental ID
+
+      db.query(
+        "INSERT INTO Rental SET ?",
+        {
+          Rental_ID,
+          Renter_ID,
+          Vehicle_ID,
+          Rental_Amount,
+          Start_date,
+          End_date,
+        },
+        (error, result) => {
+          if (error) {
+            console.log("Error inserting data:", error);
+            return res.status(500).json({ message: "Failed to book vehicle." });
+          }
+          console.log("Data inserted successfully");
+          return res
+            .status(200)
+            .json({ message: "Waiting for Owner Approval." });
+        }
+      );
+    }
+  );
+});
+
+app.post("/api/update-rental-status/:rentalId", (req, res) => {
+  const { rentalId } = req.params; // Use rentalId from the route parameter
+  const { StatusofRental } = req.body;
+
+  console.log(`Updating rental ${rentalId} with status: ${StatusofRental}`); // Log for debugging
+
+  // SQL Query to update status
+  const query = `UPDATE Rental SET StatusofRental = ? WHERE Rental_ID = ?`;
+
+  // Check if rentalId is valid and not undefined/null
+  if (!rentalId) {
+    return res.status(400).send("Rental ID is required");
+  }
+
+  // Execute the query
+  db.query(query, [StatusofRental, rentalId], function (err, result) {
+    if (err) {
+      console.error("Error updating rental status:", err); // Log the error
+      return res.status(500).send("Error updating rental status");
+    }
+
+    // Check if any rows were affected/updated
+    if (result.affectedRows === 0) {
+      return res.status(404).send("Rental ID not found");
+    }
+
+    res.status(200).send("Status updated successfully");
+  });
+});
+
 // Check session status to display username
 app.get("/session-status", (req, res) => {
   if (req.session.username) {
-    res.json({ loggedIn: true, username: req.session.username });
+    res.json({
+      loggedIn: true,
+      username: req.session.username,
+      role: req.session.role,
+    });
   } else {
     res.json({ loggedIn: false });
   }
+});
+
+// Handle user logout
+app.get("/logout", (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      console.log(err);
+      return res.redirect("/?message=Logout%20failed");
+    }
+    res.redirect("/login?message=Logged%20out%20successfully");
+  });
 });
 
 app.listen(5000, () => {
