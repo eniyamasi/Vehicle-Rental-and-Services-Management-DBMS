@@ -67,15 +67,64 @@
           rentalDiv.innerHTML = `
             <h3>Vehicle ID: ${rental.Vehicle_ID}</h3>
             <p><strong>Renter ID:</strong> ${rental.Renter_ID}</p>
-            <p><strong>Start Date:</strong> ${rental.Start_date}</p>
-            <p><strong>End Date:</strong> ${rental.End_date}</p>
+            <p><strong>Start Date:</strong> ${
+              rental.Start_date.split("T")[0]
+            }</p>
+            <p><strong>End Date:</strong> ${rental.End_date.split("T")[0]}</p>
             <p><strong>Rental Amount:</strong> ₹${rental.Rental_Amount}</p>
-            <button class="accept" onclick="updateRentalStatus('${rental.Rental_ID}', 'accepted')">Accept</button>
-            <button class="deny" onclick="updateRentalStatus('${rental.Rental_ID}', 'denied')">Deny</button>
+            <button class="accept" onclick="updateRentalStatus('${
+              rental.Rental_ID
+            }', 'accepted')">Accept</button>
+            <button class="deny" onclick="updateRentalStatus('${
+              rental.Rental_ID
+            }', 'denied')">Deny</button>
           `;
           container.appendChild(rentalDiv);
         });
       }
+      const acceptButtons = document.querySelectorAll(".accept-button");
+
+      acceptButtons.forEach((button) => {
+        button.addEventListener("click", function () {
+          const rentalId = this.getAttribute("data-rental-id");
+
+          // Send a request to the backend to update the rental status
+          axios
+            .post(`/api/update-rental-status/${rentalId}`, {
+              StatusofRental: "accepted",
+            })
+            .then((response) => {
+              alert("Rental status updated successfully!");
+              // Optionally, you could refresh the table or update the UI to show the new status
+            })
+            .catch((error) => {
+              console.error("Error updating rental status:", error);
+              alert("Failed to update rental status.");
+            });
+        });
+      });
+
+      const denyButtons = document.querySelectorAll(".deny-button");
+
+      denyButtons.forEach((button) => {
+        button.addEventListener("click", function () {
+          const rentalId = this.getAttribute("data-rental-id");
+
+          // Send a request to the backend to update the rental status to 'denied'
+          axios
+            .post(`/api/update-rental-status/${rentalId}`, {
+              StatusofRental: "denied",
+            })
+            .then((response) => {
+              alert("Rental status updated to 'denied'!");
+              // Optionally, update the UI to reflect the new status
+            })
+            .catch((error) => {
+              console.error("Error updating rental status:", error);
+              alert("Failed to update rental status.");
+            });
+        });
+      });
 
       async function updateRentalStatus(rentalId, status) {
         try {
