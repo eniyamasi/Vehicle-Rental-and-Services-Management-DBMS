@@ -1,131 +1,91 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>View Bookings</title>
+    <!-- Include both script files -->
+    <script src="/payment-handling.js"></script>
+    <script src="/bookings-handler.js"></script>
     <style>
-      body {
-        font-family: Arial, sans-serif;
-        margin: 0;
-        padding: 20px;
-        background-color: #f4f4f4;
-      }
-
-      h2 {
-        color: #0056b3;
-        margin-bottom: 20px;
-      }
-
-      .booking-container {
-        margin-bottom: 30px;
-      }
-
-      .booking {
-        border: 1px solid #0056b3;
-        padding: 15px;
-        margin-bottom: 15px;
-        background-color: #fff;
-        border-radius: 5px;
-      }
-
-      .booking h3 {
-        margin: 0 0 10px;
-        color: #0056b3;
-      }
-
-      .booking p {
-        margin: 5px 0;
-      }
+        .booking-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .booking-container {
+            margin: 20px;
+            padding: 20px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 500px;
+        }
+        .close {
+            float: right;
+            cursor: pointer;
+            font-size: 24px;
+        }
     </style>
-  </head>
-  <body>
-    <h2>Current Bookings</h2>
-    <div id="current-bookings" class="booking-container"></div>
+</head>
+<body>
+    <div class="container mx-auto px-4">
+        <h1 class="text-2xl font-bold my-4">Current Bookings</h1>
+        <div id="current-bookings" class="booking-container"></div>
 
-    <h2>Completed Bookings</h2>
-    <div id="completed-bookings" class="booking-container"></div>
+        <h1 class="text-2xl font-bold my-4">Completed Bookings</h1>
+        <div id="completed-bookings" class="booking-container"></div>
 
-    <script>
-      async function fetchBookings() {
-        try {
-          const response = await fetch("/api/bookings"); // Fetch all bookings for the renter
-          if (!response.ok) {
-            throw new Error("Failed to fetch bookings");
-          }
-          const bookings = await response.json();
-          console.log("Fetched Bookings:", bookings);
-          displayBookings(bookings);
-        } catch (error) {
-          console.error("Error:", error);
-          document.getElementById(
-            "current-bookings"
-          ).innerHTML = `<p>Error fetching bookings. Please try again later.</p>`;
-        }
-      }
+        <!-- Payment Modal -->
 
-      function displayBookings(bookings) {
-        const currentBookingsContainer =
-          document.getElementById("current-bookings");
-        const completedBookingsContainer =
-          document.getElementById("completed-bookings");
-
-        currentBookingsContainer.innerHTML = "";
-        completedBookingsContainer.innerHTML = "";
-
-        const today = new Date();
-        const todayISO = today.toISOString().split("T")[0];
-        console.log(todayISO);
-
-        bookings.forEach((booking) => {
-          const startDateISO = booking.Start_date.split("T")[0];
-          const endDateISO = booking.End_date.split("T")[0];
-          console.log(startDateISO);
-          console.log(endDateISO);
-          const bookingDiv = document.createElement("div");
-          bookingDiv.classList.add("booking");
-
-          // Display vehicle details and booking information
-          bookingDiv.innerHTML = `
-            <h3>${booking.Vehicle.Variant}</h3>
-            <h4>${booking.Vehicle.rand}</h4>
-            <p><strong>Start Date:</strong> ${
-              booking.Start_date.split("T")[0]
-            }</p>
-            <p><strong>End Date:</strong> ${booking.End_date.split("T")[0]}</p>
-            <p><strong>Rental Amount:</strong> ₹${booking.Rental_Amount}</p>
-            <p><strong>Fuel Type:</strong> ${booking.Vehicle.Fuel}</p>
-            <p><strong>Seater:</strong> ${booking.Vehicle.Seater}</p>
-            <p><strong>AC Type:</strong> ${booking.Vehicle.AC_Type}</p>
-            <p><strong>Distance Travelled:</strong> ${
-              booking.Vehicle.Distance
-            } km</p>
-            <p><strong>Status of Rental:</strong> ${booking.StatusofRental} </p>
-          `;
-
-          // Separate into current and completed bookings
-          if (todayISO > endDateISO) {
-            completedBookingsContainer.appendChild(bookingDiv);
-          } else {
-            currentBookingsContainer.appendChild(bookingDiv);
-          }
-        });
-
-        // In case no bookings found for current or completed
-        if (currentBookingsContainer.innerHTML === "") {
-          currentBookingsContainer.innerHTML =
-            "<p>No current bookings found.</p>";
-        }
-        if (completedBookingsContainer.innerHTML === "") {
-          completedBookingsContainer.innerHTML =
-            "<p>No completed bookings found.</p>";
-        }
-      }
-
-      // Call fetchBookings when the page loads
-      window.onload = function () {
-        fetchBookings();
-      };
-    </script>
-  </body>
+        <div id="paymentModal" class="modal">
+            <div class="modal-content">
+              <span id="closeModal" class="close">&times;</span>
+              <h2>Payment Details</h2>
+              <form>
+                <div class="form-group">
+                  <label>Payment Method:</label>
+                  <select name="payment-method">
+                    <option value="UPI">UPI</option>
+                    <option value="Cash">Cash</option>
+                    <option value="Debit Card">Debit Card</option>
+                    <option value="Credit Card">Credit Card</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Amount:</label>
+                  <input type="number" name="amount" readonly>
+                </div>
+                <!-- <div class="form-group">
+                  <label>Date of Payment:</label>
+                  <input type="date" name="payment-date" readonly>
+                </div> -->
+                <button type="submit">Submit Payment</button>
+              </form>
+                <div id="invoice" style="display: none;">
+                    <h3>Invoice</h3>
+                    <!-- <p><strong>Payment ID:22e80fe7-ff1d-4a94-94fc-4711a060a83b</strong> <span id="paymentId"></span></p> -->
+                    <p><strong>Payment Method:</strong> <span id="invoiceMethod"></span></p>
+                    <p><strong>Amount:</strong> ₹<span id="invoiceAmount"></span></p>
+                    <p><strong>Date:</strong> <span id="invoiceDate"></span></p>
+                    <p><strong>Invoice ID:</strong> <span id="invoiceId"></span></p>
+                </div>
+            </div>
+        </div>            
+</body>
 </html>
